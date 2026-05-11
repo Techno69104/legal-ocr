@@ -1,0 +1,12 @@
+services:
+  - type: web
+    name: legal-ocr
+    runtime: image
+    plan: free
+    buildCommand: ./render-build.sh
+    startCommand: gunicorn app:app --timeout 300 --workers 1 --bind 0.0.0.0:$PORT
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.10.0
+      - key: PADDLE_USE_GPU
+        value: "0"
