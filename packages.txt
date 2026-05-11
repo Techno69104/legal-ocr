@@ -1,0 +1,6 @@
+poppler-utils
+build-essential
+libglib2.0-0
+libsm6
+libxrender1
+libfontconfig1
