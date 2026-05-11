@@ -7,6 +7,4 @@ services:
     startCommand: gunicorn app:flask_app --bind 0.0.0.0:$PORT --timeout 300 --workers 1
     envVars:
       - key: PYTHON_VERSION
-        value: 3.11.0
-      - key: TESSDATA_PREFIX
-        value: /usr/share/tesseract-ocr/5/tessdata
+        value: 3.11.9
