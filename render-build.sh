@@ -1,27 +1,11 @@
 #!/bin/bash
 
-echo "Starting Render build with PyMuPDF fix..."
-
-# Update system packages
+echo "Installing system dependencies..."
 apt-get update
+apt-get install -y tesseract-ocr tesseract-ocr-eng poppler-utils
 
-# Install system dependencies from packages.txt
-apt-get install -y \
-    poppler-utils \
-    build-essential \
-    libglib2.0-0 \
-    libsm6 \
-    libxrender1 \
-    libfontconfig1 \
-    libgl1-mesa-glx
+echo "Installing Python packages..."
+pip install --upgrade pip
+pip install --no-cache-dir flask gradio pdfplumber pdf2image pillow gunicorn opencv-python-headless numpy pytesseract
 
-# Upgrade pip and install wheel
-pip install --upgrade pip wheel setuptools
-
-# Install Python dependencies (use --no-cache-dir to save space)
-pip install --no-cache-dir -r requirements.txt
-
-# Alternative: Install pymupdf separately with pre-built wheel
-# pip install --no-cache-dir --only-binary :all: pymupdf
-
-echo "Build completed successfully!"
+echo "Build complete!"
