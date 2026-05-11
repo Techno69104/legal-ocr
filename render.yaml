@@ -1,12 +1,12 @@
 services:
   - type: web
-    name: legal-ocr
+    name: pdf-extractor
     runtime: image
     plan: free
     buildCommand: ./render-build.sh
-    startCommand: gunicorn app:app --timeout 300 --workers 1 --bind 0.0.0.0:$PORT
+    startCommand: gunicorn app:flask_app --bind 0.0.0.0:$PORT --timeout 300 --workers 1
     envVars:
       - key: PYTHON_VERSION
-        value: 3.10.0
-      - key: PADDLE_USE_GPU
-        value: "0"
+        value: 3.11.0
+      - key: TESSDATA_PREFIX
+        value: /usr/share/tesseract-ocr/5/tessdata
