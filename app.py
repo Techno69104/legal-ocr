@@ -18,7 +18,6 @@ def extract_text_from_pdf(pdf_path):
     try:
         with pdfplumber.open(pdf_path) as pdf:
             for page_num, page in enumerate(pdf.pages):
-                # Try direct text extraction
                 text = page.extract_text()
                 
                 if text and len(text.strip()) > 50:
@@ -28,7 +27,6 @@ def extract_text_from_pdf(pdf_path):
                         "method": "digital"
                     })
                 else:
-                    # Use OCR for scanned pages
                     images = convert_from_path(pdf_path, first_page=page_num+1, last_page=page_num+1, dpi=150)
                     if images:
                         ocr_text = pytesseract.image_to_string(images[0])
@@ -37,12 +35,6 @@ def extract_text_from_pdf(pdf_path):
                             "text": ocr_text if ocr_text else "[No text found]",
                             "method": "ocr"
                         })
-                    else:
-                        results.append({
-                            "page": page_num + 1,
-                            "text": "[Could not process page]",
-                            "method": "error"
-                        })
     except Exception as e:
         return [{"page": 0, "text": f"Error: {str(e)}", "method": "error"}]
     
@@ -50,7 +42,6 @@ def extract_text_from_pdf(pdf_path):
 
 @flask_app.route('/ingest', methods=['POST'])
 def ingest_pdf():
-    """API endpoint for PDF processing"""
     if 'file' not in request.files:
         return jsonify({'error': 'No file provided'}), 400
     
@@ -64,21 +55,12 @@ def ingest_pdf():
     
     try:
         results = extract_text_from_pdf(temp_path)
-        
         result_id = str(uuid.uuid4())
-        output_path = f"/tmp/{result_id}.json"
-        
-        with open(output_path, 'w') as f:
-            json.dump({
-                "filename": filename,
-                "results": results,
-                "total_pages": len(results)
-            }, f, indent=2)
         
         return jsonify({
             "success": True,
             "result_id": result_id,
-            "download_url": f"/download/{result_id}",
+            "results": results,
             "pages": len(results)
         })
     except Exception as e:
@@ -86,19 +68,6 @@ def ingest_pdf():
     finally:
         if os.path.exists(temp_path):
             os.remove(temp_path)
-
-@flask_app.route('/download/<result_id>', methods=['GET'])
-def download_result(result_id):
-    """Download extracted results as JSON"""
-    output_path = f"/tmp/{result_id}.json"
-    if os.path.exists(output_path):
-        return send_file(
-            output_path, 
-            as_attachment=True, 
-            download_name=f"extracted_{result_id}.json",
-            mimetype='application/json'
-        )
-    return jsonify({'error': 'Result not found'}), 404
 
 @flask_app.route('/health', methods=['GET'])
 def health_check():
@@ -120,14 +89,13 @@ def process_pdf(file):
     
     return "\n".join(output)
 
-# Create Gradio interface
 with gr.Blocks(title="PDF Extractor", theme=gr.themes.Soft()) as demo:
     gr.Markdown("# 📄 PDF Text Extractor")
-    gr.Markdown("Upload any PDF - extracts text from both digital and scanned documents")
+    gr.Markdown("Upload any PDF - works with digital and scanned documents")
     
     with gr.Row():
         pdf_input = gr.File(label="Upload PDF", file_types=[".pdf"])
-        output_text = gr.Textbox(label="Extracted Text", lines=25, max_lines=50)
+        output_text = gr.Textbox(label="Extracted Text", lines=25)
     
     pdf_input.change(process_pdf, inputs=pdf_input, outputs=output_text)
     
@@ -135,16 +103,12 @@ with gr.Blocks(title="PDF Extractor", theme=gr.themes.Soft()) as demo:
     gr.Markdown("### 📡 API Usage")
     gr.Markdown("```bash\ncurl -F file=@document.pdf https://your-app.onrender.com/ingest\n```")
 
-# Start both servers
+# Run both
 if __name__ == "__main__":
     import threading
     
-    # Run Flask in background thread
     def run_flask():
         flask_app.run(host='0.0.0.0', port=5001, threaded=True)
     
-    flask_thread = threading.Thread(target=run_flask, daemon=True)
-    flask_thread.start()
-    
-    # Run Gradio on main port
+    threading.Thread(target=run_flask, daemon=True).start()
     demo.launch(server_name="0.0.0.0", server_port=10000)
