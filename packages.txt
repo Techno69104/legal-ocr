@@ -1,8 +1,7 @@
 poppler-utils
-build-essential
+tesseract-ocr
+tesseract-ocr-eng
 libglib2.0-0
 libsm6
 libxrender1
 libfontconfig1
-libgl1-mesa-glx
-libglib2.0-0
