@@ -3,8 +3,7 @@ services:
     name: pdf-extractor
     runtime: image
     plan: free
-    buildCommand: ./render-build.sh
-    startCommand: gunicorn app:flask_app --bind 0.0.0.0:$PORT --timeout 300 --workers 1
+    dockerfilePath: ./Dockerfile
     envVars:
       - key: PYTHON_VERSION
         value: 3.11.9
